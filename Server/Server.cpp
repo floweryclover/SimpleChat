@@ -26,16 +26,34 @@ private:
 		if (!error)
 		{
 			std::cout << *remote_endpoint << std::endl;
+			message_ = "테스트 메세지";
+			remote_socket->async_send(boost::asio::buffer(message_), boost::bind(&ChatServer::SendHandler, this, boost::asio::placeholders::error, boost::asio::placeholders::bytes_transferred));
 			WaitForAccept();
 		}
 		else
 		{
-			std::cerr << error << std::endl;
 			std::cerr << "An error occured" << std::endl;
+			std::cerr << error << std::endl;
 			return;
 		}
 	}
 
+	void WaitForReceive(std::shared_ptr<boost::asio::ip::tcp::socket> remote_socket)
+	{
+		//remote_socket->async_receive(boost::bind(&ChatServer::ReceiveHandler, this, boost::asio::placeholders::error, boost::asio::placeholders::bytes_transferred));
+	}
+
+	void ReceiveHandler(const boost::system::error_code& error, size_t bytes_transferred)
+	{
+
+	}
+
+	void SendHandler(const boost::system::error_code& /*error*/, size_t /*bytes_transferred*/)
+	{
+
+	}
+
+	std::string message_;
 	boost::asio::io_context& io_context_;
 	boost::asio::ip::tcp::acceptor acceptor_;
 	
