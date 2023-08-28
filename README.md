@@ -7,7 +7,12 @@ Small personal project written in C++ to learn boost asio library and basic TCP/
 * Boost 1.83.0
 
 ## Server Usage
-* server.exe <ip> <port> <channel-password>. ip, port to bind. All client attempt to connect are required to enter channel-password
+```
+server.exe <ip> <port> <channel-password>
+```
+All client attempt to connect are required to enter channel-password
 
 ## Client Usage
-* client.exe <ip> <port>. ip, port of server to connect
+```
+client.exe <ip> <port>
+```
