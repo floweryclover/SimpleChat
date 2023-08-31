@@ -1,4 +1,6 @@
 ﻿#include <iostream>
+#include <string>
+#include <vector>
 
 #include "boost/asio.hpp"
 #include "boost/bind/bind.hpp"
@@ -21,7 +23,37 @@ int main(int argc, char* argv[])
 		for (;;)
 		{
 			boost::array<char, 128> buf;
+			//
+			std::string body("메세지1");
+			size_t header = body.size();
+			std::vector<char> send_buffer(sizeof(header) + body.size());
+			std::memcpy(send_buffer.data(), &header, sizeof(header));
+			std::memcpy(send_buffer.data()+sizeof(header), body.data(), body.size());
 			boost::system::error_code error;
+			socket.send(boost::asio::buffer(send_buffer));
+
+			body = "두번째 메세지";
+			header = body.size();
+			send_buffer.resize(sizeof(header) + body.size());
+			std::memcpy(send_buffer.data(), &header, sizeof(header));
+			std::memcpy(send_buffer.data() + sizeof(header), body.data(), body.size());
+			socket.send(boost::asio::buffer(send_buffer));
+
+			body = "Third message";
+			header = body.size();
+			send_buffer.resize(sizeof(header) + body.size());
+			std::memcpy(send_buffer.data(), &header, sizeof(header));
+			std::memcpy(send_buffer.data() + sizeof(header), body.data(), body.size());
+			socket.send(boost::asio::buffer(send_buffer));
+
+			body = "A long long long long long long long long long long long long long long long long long long long long long long long long message";
+			header = body.size();
+			send_buffer.resize(sizeof(header) + body.size());
+			std::memcpy(send_buffer.data(), &header, sizeof(header));
+			std::memcpy(send_buffer.data() + sizeof(header), body.data(), body.size());
+			socket.send(boost::asio::buffer(send_buffer));
+
+
 			size_t len = socket.read_some(boost::asio::buffer(buf), error);
 
 			if (error == boost::asio::error::eof)
