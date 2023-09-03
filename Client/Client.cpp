@@ -34,15 +34,7 @@ int main(int argc, char* argv[])
 		socket.send(boost::asio::buffer(send_buffer));
 
 		std::array<char, 1> auth_response_buf = {};
-		size_t len = socket.read_some(boost::asio::buffer(auth_response_buf), error);
-
-		if (error == boost::asio::error::eof)
-		{
-			std::cerr << "서버와의 연결이 끊겼습니다." << std::endl;
-			return 1;
-		}
-		else if (error)
-			throw boost::system::system_error(error);
+		size_t len = socket.receive(boost::asio::buffer(auth_response_buf));
 
 		if (*auth_response_buf.begin() == '0')
 		{
@@ -66,6 +58,7 @@ int main(int argc, char* argv[])
 				std::string message;
 				size_t header;
 				std::vector<char> send_buffer;
+
 				while (true)
 				{
 					std::cin >> message;
@@ -76,8 +69,53 @@ int main(int argc, char* argv[])
 					socket.send(boost::asio::buffer(send_buffer));
 				}
 			});
-		input_thread.join();
 
+		
+		while (true)
+		{
+			std::array<char, 8> header = {};
+			size_t header_received = 0;
+			boost::system::error_code error;
+			while (header_received < 8)
+			{
+				std::array<char, 8> buf = {};
+				size_t recv = socket.receive(boost::asio::buffer(buf, 8 - header_received));
+
+				std::copy(buf.begin(), buf.begin() + recv, header.begin() + header_received);
+				header_received += recv;
+			}
+
+			size_t body_length;
+			
+			std::memcpy(&body_length, header.data(), 8);
+			size_t body_received = 0;
+			std::vector<char> body(body_length);
+			while (body_received < body_length)
+			{
+				std::array<char, 4> buf = {};
+				size_t to_recv = 4 < (body_length - body_received) ? 4 : body_length - body_received;
+				size_t recv = socket.receive(boost::asio::buffer(buf, to_recv));
+				
+				std::copy(buf.begin(), buf.begin() + recv, body.begin() + body_received);
+				body_received += recv;
+			}
+
+			std::cout.write(body.data(), body_length);
+		}
+
+
+
+	}
+	catch (boost::system::system_error& e)
+	{
+		if (e.code() == boost::asio::error::eof)
+		{
+			std::cerr << "서버와의 연결이 끊어졌습니다." << std::endl;
+		}
+		else
+		{
+			std::cerr << "에러가 발생했습니다: " << e.what() << std::endl;
+		}
 	}
 	catch (std::exception& e)
 	{
