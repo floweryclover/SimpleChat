@@ -101,6 +101,7 @@ int main(int argc, char* argv[])
 			}
 
 			std::cout.write(body.data(), body_length);
+			std::cout << std::endl;
 		}
 
 

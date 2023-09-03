@@ -46,6 +46,15 @@ public:
 		socket_.async_receive(boost::asio::buffer(receive_buffer_, header_to_receive_), boost::bind(&TcpConnection::ReceiveHandler, this, boost::asio::placeholders::error, boost::asio::placeholders::bytes_transferred));
 	}
 
+	void AsyncSendMessage(const std::string& msg)
+	{
+		size_t header = msg.size();
+		std::vector<char> send_buffer(sizeof(header) + msg.size());
+		std::memcpy(send_buffer.data(), &header, sizeof(header));
+		std::memcpy(send_buffer.data() + sizeof(header), msg.data(), msg.size());
+		socket_.send(boost::asio::buffer(send_buffer));
+	}
+
 	bool IsDisconnected() const noexcept { return this->current_operation_ == Disconnected; }
 
 private:
@@ -87,10 +96,7 @@ private:
 			// 바디를 다 채웠으면 핸들러를 호출하고 다음 헤더 받을 준비
 			if (body_to_receive_ == 0)
 			{
-				
-
 				OnPacketReceived();
-
 				header_to_receive_ = header_.size();
 				socket_.async_receive(boost::asio::buffer(receive_buffer_, header_to_receive_), boost::bind(&TcpConnection::ReceiveHandler, this, boost::asio::placeholders::error, boost::asio::placeholders::bytes_transferred));
 			}
@@ -206,7 +212,14 @@ private:
 
 	void OnClientChatHandler(const std::string& nickname, const std::string& chat)
 	{
-		std::cout << nickname << ": " << chat << std::endl;
+		std::string full_msg = nickname + ": " + chat;
+		std::cout << full_msg << std::endl;
+
+		// 브로드캐스트
+		for (auto connection : connections_)
+		{
+			connection->AsyncSendMessage(full_msg);
+		}
 	}
 
 	void OnClientDisconnected(const std::string& nickname)
